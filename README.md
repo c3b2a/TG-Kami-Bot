@@ -1,6 +1,7 @@
 就一个 kami.py 别告诉我不会用
 
 需要安装 telepot 和 watchdog
+
 pip3 install telepot watchdog
 
 卡密 Bot Developed By [c3b2a](https://t.me/c3b2abot)
