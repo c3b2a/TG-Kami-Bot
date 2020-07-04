@@ -4,6 +4,8 @@
 
 pip3 install telepot watchdog
 
+[Telegram 更新频道](https://t.me/kamibotchannel)
+
 卡密 Bot Developed By [c3b2a](https://t.me/c3b2abot)
 
 第一次运行前请把 kami.py 中的 Token 替换为自己的 Bot 的 Token
