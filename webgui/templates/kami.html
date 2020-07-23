@@ -1,0 +1,636 @@
+{% load custom %}
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Kami Manager</title>
+</head>
+
+<script src="https://cdn.staticfile.org/jquery/1.12.4/jquery.min.js"></script>
+
+<style type="text/css">
+	body {
+		margin: 0;
+		padding: 16px;
+	}
+	.non-color {
+		color: transparent;
+	}
+	.table-style {
+		margin: 8px;
+		border: solid 1px #222222;
+		border-radius: 8px;
+		line-height: 200%;
+		left: 50%;
+		position: relative;
+		transform: translate(-50%,0);
+	}
+	.table-style th, .table-style td {
+		padding: 2px;
+		border: solid 1px #444444;
+		border-radius: 2px;
+		padding-left: 6px;
+		padding-right: 6px;
+	}
+	.bg-layer {
+		width: 100%;
+		height: 100%;
+		background-color: #BBBBBB80;
+		position: absolute;
+		left: 0%;
+		top: 0%;
+		display: none;
+	}
+	.pop-out {
+		padding: 32px;
+		width: 640px;
+		height: auto;
+		border: transparent;
+		position: absolute;
+		left: 50%;
+		top: 10%;
+		transform: translate(-50%,0);
+		background-color: #BBBBBB;
+		border-radius: 12px;
+		box-shadow: 5px 5px 10px #BBBBBB,-5px -5px 10px #BBBBBB,-5px 5px 10px #BBBBBB,5px -5px 10px #BBBBBB;
+		display: none;
+	}
+</style>
+
+<body>
+	<form action="/redirect" method="get">
+		<button type="submit" name="panel">返回面板</button>
+		<button type="submit" name="kami">刷新页面</button>
+	</form>
+	{% if loginIdentity != 'writeonly' %}
+		<form action="/panel/kami" method="post">
+			{% csrf_token %}
+			<table class="table-style" style="margin: 0; margin-top: 20px;">
+				<tr>
+					{% if loginIdentity != 'readonly' %}
+						<th><input type="checkbox" id="selectAll" onchange="selectAllCheckboxChanged()"></th>
+					{% endif %}
+					<th>卡密</th>
+					<th>可用次数</th>
+					<th>Tag</th>
+					<th>备注</th>
+				</tr>
+				{% for a,b,c,d in kamiList %}
+					<tr>
+						{% if loginIdentity != 'readonly' %}
+							<td><input type="checkbox" name="checkbox{{ forloop.counter0 }}" id="checkbox{{ forloop.counter0 }}"></td>
+						{% endif %}
+						<td>{{ a }}</td>
+						<td style="text-align: right;">{{ b }}</td>
+						<td>{% listToString c %}</td>
+						<td>{{ d }}</td>
+					</tr>
+				{% endfor %}
+			</table>
+		{% if loginIdentity != 'readonly' %}
+				<span style="margin: 8px;">
+					<input type="text" name="nkamiinput" id="inputnkami">
+					<button type="submit" name="setkami" onclick="chkMultiSelect(); isLetterOrDigit(document.getElementById('inputnkami').value);">设置卡密</button>
+				</span>
+				<span style="margin: 8px; margin-left: 0;">
+					<input type="number" name="nkaminum" id="nkaminum" style="width: 80px;">
+					<button type="submit" name="setnum" onclick="chkNonSelect()">设置次数</button>
+				</span>
+				<button type="submit" name="resetkami" onclick="chkNonSelect()" style="margin: 8px; margin-left: 0;">重置卡密</button>
+				<button type="submit" name="deletekami" onclick="chkNonSelect()" style="margin: 8px; margin-left: 0;">删除</button>
+			</form>
+			<span style="margin: 8px; ">
+				<span>Tag: <input type="text" id="tagChoose"></span>
+				<button onclick="chooseKamiByTag('tagChoose')">选择卡密</button>
+			</span>
+			<button style="margin: 8px; margin-left: 0;" onclick="reverseSelect()">反向选择</button>
+			<button style="margin: 8px; margin-left: 0;" onclick="chooseNoLeft()">选择无剩余次数</button>
+			<button style="margin: 8px; margin-left: 16px;" onclick="displayEditForm()">编辑</button>
+			<button style="margin: 8px;" onclick="displayAddForm()">添加</button>
+			<button style="margin: 8px;" onclick="displayAddFormTable()">多表格添加</button>
+			<div class="bg-layer" id="pop-out-bg"></div>
+			<div class="pop-out" id="pop-out-edit">
+				<button style="position: relative; width: 48px; left: calc(100% - 56px); top: 8px;" onclick="closeEditForm()">关闭</button>
+				<div>
+					<p id="editFormDisplayKamiParagraph"></p>
+					<p id="editFormDisplayNumParagraph"></p>
+					<p id="editFromDisplayTagParagraph"></p>
+					<p id="editFormDisplayPsParagraph"></p>
+					<br>
+					<p>不填写内容则为不更改</p>
+					<br>
+					<form action="/panel/kami" method="post" onsubmit="return validateEditForm()" name="editForm">
+						{% csrf_token %}
+						<p>新卡密: <input type="text" id="editFormInputNewKami" name="editFormInputNewKami"></p>
+						<p>新使用次数: <input type="number" id="editFormInputNewNum" name="editFormInputNewNum"></p>
+						<p>新 Tag : <input type="text" id="editFormInputNewTag" name="editFormInputNewTag"></p>
+						<p>新备注: <input type="text" id="editFormInputNewPs" name="editFormInputNewPs"></p>
+						<button type="submit" name="editkamidetails" style="position: relative; left: 50%; transform: translate(-50%,0);">确认编辑</button>
+					</form>
+				</div>
+			</div>
+			<div class="pop-out" id="pop-out-add">
+				<button style="position: relative; width: 48px; left: calc(100% - 56px); top: 8px;" onclick="closeAddForm()">关闭</button>
+				<form action="/panel/kami" method="post" onsubmit="return validateAddForm()" name="addForm" style="line-height: 200%;">
+					{% csrf_token %}
+					<p>卡密留空则为随机生成</p>
+					<br>
+					<p>卡密: <input type="text" name="akami"></p>
+					<p>使用次数: <input type="number" name="anum"></p>
+					<p>Tag: <input type="text" name="atag"></p>
+					<p>备注: <input type="text" name="aps"></p>
+					<button type="submit" name="addkamidetails" style="position: relative; left: 50%; transform: translate(-50%,0);">添加</button>
+				</form>
+			</div>
+			<div class="pop-out" id="pop-out-add-table" style="margin-bottom: 40px;">
+				<button style="position: relative; width: 48px; left: calc(100% - 60px); top: 8px;" onclick="closeAddFormTable()">关闭</button>
+				<form action="/panel/kami" method="post" onsubmit="return validateAddTable()" id="addTableFormId">
+					{% csrf_token %}
+					<input type="hidden" name="addInBulkInputHidden">
+					<table class="table-style" id="addCtlTable" style="margin: 0; margin-top: 48px; margin-bottom: 16px;">
+						<tbody id="addTableTbody">
+							<tr>
+								<th><input type="checkbox" id="addTableSelectAll" onchange="addTableSelectAllChanged()"></th>
+								<th>卡密</th>
+								<th>可用次数</th>
+								<th>Tag</th>
+								<th>备注</th>
+							</tr>
+							<tr id="addTableTr0">
+								<td><input type="checkbox" id="addTableCb0" name="addTableCb0"></td>
+								<td><input type="text" id="addTableKami0" name="addTableKami0" style="width: 120px;"></td>
+								<td><input type="number" id="addTableNum0" name="addTableNum0" style="width: 120px;"></td>
+								<td><input type="text" id="addTableTag0" name="addTableTag0" style="width: 120px;"></td>
+								<td><input type="text" id="addTablePs0" name="addTablePs0" style="width: 120px;"></td>
+							</tr>
+						</tbody>
+					</table>
+				</form>
+				<button onclick="addTableAddTr()">添加</button>
+				<button onclick="removeAddTable()">删除</button>
+				<button type="submit" name="addTableSubmitBtn" onclick="submitAddTable()" style="width: 72px; position: relative; left: calc(100% - 180px);">添加卡密</button>
+			</div>
+			<form action="/panel/kami" method="post" style="margin-bottom: 12px;">
+				{% csrf_token %}
+				<button type="submit" name="export_kami">导出卡密</button>
+			</form>
+		{% else %}
+			</form>
+		{% endif %}
+	{% else %}
+		<div style="padding: 16px;">
+			<h2 style="font-size: 1.4em;">添加卡密</h2>
+			<form action="/panel/kami" method="post" onsubmit="return validateAddForm()" name="addForm" style="line-height: 150%">
+				{% csrf_token %}
+				<p>卡密留空则为随机生成</p>
+				<p>卡密: <input type="text" name="akami"></p>
+				<p>使用次数: <input type="number" name="anum"></p>
+				<p>Tag: <input type="text" name="atag"></p>
+				<p>备注: <input type="text" name="aps"></p>
+				<button type="submit" name="addkamidetails">添加</button>
+			</form>
+		</div>
+		<div style="width: 640px; margin-bottom: 16px;">
+			<h2 style="font-size: 1.4em;">批量添加卡密</h2>
+			<form action="/panel/kami" method="post" onsubmit="return validateAddTable()" id="addTableFormId">
+				{% csrf_token %}
+				<input type="hidden" name="addInBulkInputHidden">
+				<table class="table-style" id="addCtlTable" style="margin: 0; margin-top: 20px; margin-bottom: 16px;">
+					<tbody id="addTableTbody">
+						<tr>
+							<th><input type="checkbox" id="addTableSelectAll" onchange="addTableSelectAllChanged()"></th>
+							<th>卡密</th>
+							<th>可用次数</th>
+							<th>Tag</th>
+							<th>备注</th>
+						</tr>
+						<tr id="addTableTr0">
+							<td><input type="checkbox" id="addTableCb0" name="addTableCb0"></td>
+							<td><input type="text" id="addTableKami0" name="addTableKami0" style="width: 120px;"></td>
+							<td><input type="number" id="addTableNum0" name="addTableNum0" style="width: 120px;"></td>
+							<td><input type="text" id="addTableTag0" name="addTableTag0" style="width: 120px;"></td>
+							<td><input type="text" id="addTablePs0" name="addTablePs0" style="width: 120px;"></td>
+						</tr>
+					</tbody>
+				</table>
+			</form>
+			<div style="position: relative; left: 50%; transform: translate(-50%,0); width: 620px;">
+				<button onclick="addTableAddTr()">添加</button>
+				<button onclick="removeAddTable()">删除</button>
+				<button type="submit" name="addTableSubmitBtn" onclick="submitAddTable()" style="width: 72px; position: relative; left: calc(100% - 170px);">添加卡密</button>
+			</div>
+		</div>
+	{% endif %}
+	{% if loginIdentity != 'readonly' %}
+		<form enctype="multipart/form-data" action="/panel/kami" method="post" onsubmit="return true">
+			{% csrf_token %}
+			<input type="file" name="import_file" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" style="width: 160px;">
+			<button type="submit" name="file_import_submit_btn">导入</button>
+		</form>
+	{% endif %}
+</body>
+
+<script type="text/javascript">
+	function selectAllCheckboxChanged() {
+		if (document.getElementById('selectAll').checked) {
+			{% for i in kamiList %}
+				document.getElementById('checkbox{{ forloop.counter0 }}').checked = true;
+			{% endfor %}
+		}
+		else {
+			{% for i in kamiList %}
+				document.getElementById('checkbox{{ forloop.counter0 }}').checked = false;
+			{% endfor %}
+		}
+	}
+	function chkNonSelect() {
+		var counts = 0;
+		{% for i in kamiList %}
+			if (document.getElementById('checkbox{{ forloop.counter0 }}').checked) {
+				counts++;
+			}
+		{% endfor %}
+		if (counts == 0) {
+			alert('未选择卡密');
+			return true
+		}
+		return false
+	}
+	function chkMultiSelect() {
+		var counts = 0;
+		{% for i in kamiList %}
+			if (document.getElementById('checkbox{{ forloop.counter0 }}').checked) {
+				counts++;
+			}
+		{% endfor %}
+		if (counts != 1) {
+			alert('必须选择一个');
+			return true
+		}
+		return false
+	}
+	function isInArray(arr,item) {
+		var length = arr.length;
+		var length2 = item.length;
+		for (var i = 0;i < length;i++) {
+			let flag = true;
+			for (var j = 0;j < length2;j++) {
+				if (!arr.includes(item[j])) {
+					flag = false;
+					break;
+				}
+			}
+			if (!flag) {
+				return false;
+			}
+		}
+		return true;
+	}
+	function chooseKamiByTag(textId) {
+		var arr;
+		var text = document.getElementById(textId).value;
+		var strList;
+		{% for a,b,c,d in kamiList %}
+			strList = text.split(':');
+			arr = new Array();
+			{% for i in c %}
+				arr[arr.length] = "{{ i }}";
+			{% endfor %}
+			if (isInArray(arr,strList)) {
+				document.getElementById('checkbox{{ forloop.counter0 }}').checked = true;
+			}
+			else {
+				document.getElementById('checkbox{{ forloop.counter0 }}').checked = false;
+			}
+		{% endfor %}
+	}
+	function chooseNoLeft() {
+		{% for a,b,c,d in kamiList %}
+			{% ifequal b 0%}
+				document.getElementById('checkbox{{ forloop.counter0 }}').checked = true;
+			{% endifequal %}
+		{% endfor %}
+	}
+	function isLetterOrDigit(string) {
+		var regexp = new RegExp("^[A-Za-z0-9]*$");
+		if (!regexp.test(string)) {
+			alert('仅允许字母和数字');
+		}
+	}
+	function isLetterOrDigitNoAlert(string) {
+		var regexp = new RegExp("^[A-Za-z0-9]*$");
+		if (!regexp.test(string)) {
+			return false;
+		}
+		return true;
+	}
+	function isAllDigitNoAlert(string) {
+		var regexp = new RegExp("^[0-9]*$");
+		if (!regexp.test(string)) {
+			return false;
+		}
+		return true;
+	}
+	function isTagAvail(string) {
+		var regexp = /^[A-Za-z0-9\u4e00-\u9fa5:]*$/;
+		if (!regexp.test(string)) {
+			return false;
+		}
+		return true;
+	}
+	function displayEditForm() {
+		if (!chkMultiSelect()){
+			{% for a,b,c,d in kamiList %}
+				if (document.getElementById('checkbox{{ forloop.counter0 }}').checked) {
+					toTop();
+					document.cookie = "editFormSelect={{ a }}:{{ loginToken }}";
+					document.getElementById('editFormDisplayKamiParagraph').innerHTML = "卡密: {{ a }}";
+					document.getElementById('editFormDisplayNumParagraph').innerHTML = "可用次数: {{ b }}";
+					document.getElementById('editFromDisplayTagParagraph').innerHTML = "Tag: {% listToString c %}";
+					document.getElementById('editFormDisplayPsParagraph').innerHTML = "备注: {{ d }}";
+				}
+			{% endfor %}
+			document.getElementById('pop-out-edit').style.display = 'block';
+			document.getElementById('pop-out-bg').style.display = 'block';
+		}
+	}
+	function closeEditForm() {
+		document.cookie = "editFormSelect=; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+		document.getElementById('pop-out-edit').style.display = 'none';
+		document.getElementById('pop-out-bg').style.display = 'none';
+	}
+	function displayAddForm() {
+		toTop();
+		document.cookie = "addFormOpened=1;";
+		document.getElementById('pop-out-add').style.display = 'block';
+		document.getElementById('pop-out-bg').style.display = 'block';
+	}
+	function closeAddForm() {
+		document.cookie = "addFormOpened=; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+		document.getElementById('pop-out-add').style.display = 'none';
+		document.getElementById('pop-out-bg').style.display = 'none';
+	}
+	function displayAddFormTable() {
+		toTop();
+		document.cookie = "addTableOpened=1;";
+		document.getElementById('pop-out-add-table').style.display = 'block';
+		document.getElementById('pop-out-bg').style.display = 'block';
+	}
+	function closeAddFormTable() {
+		document.cookie = "addTableOpened=; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+		document.getElementById('pop-out-add-table').style.display = 'none';
+		document.getElementById('pop-out-bg').style.display = 'none';
+	}
+	function validateEditForm() {
+		var form = document.forms['editForm'];
+		var editItemsArray = new Array(4);
+		editItemsArray[0] = form['editFormInputNewKami'].value;
+		editItemsArray[1] = form['editFormInputNewNum'].value;
+		editItemsArray[2] = form['editFormInputNewTag'].value;
+		editItemsArray[3] = form['editFormInputNewPs'].value;
+		if (!isLetterOrDigitNoAlert(editItemsArray[0])) {
+			alert('卡密仅允许字母和数字');
+			return false;
+		}
+		else if (!isAllDigitNoAlert(editItemsArray[1])) {
+			alert('数量仅允许输入数字');
+			return false;
+		}
+		else if (!isTagAvail(editItemsArray[2])) {
+			alert('Tag 只允许中文、英文、和字母，多 Tag 间使用冒号隔开');
+			return false;
+		}
+		return true;
+	}
+	function validateAddForm() {
+		var form = document.forms['addForm'];
+		var addItemsArray = new Array(4);
+		addItemsArray[0] = form['akami'].value;
+		addItemsArray[1] = form['anum'].value;
+		addItemsArray[2] = form['atag'].value;
+		addItemsArray[3] = form['aps'].value;
+		if (addItemsArray[0] && !isLetterOrDigitNoAlert(addItemsArray[0])) {
+			alert('卡密只允许字母和数字');
+			return false;
+		}
+		else if (!addItemsArray[1]) {
+			alert('次数不允许为空');
+			return false;
+		}
+		else if (!isAllDigitNoAlert(addItemsArray[1])) {
+			alert('次数仅允许数字');
+			return false;
+		}
+		else if (!addItemsArray[2]) {
+			alert('Tag 不允许为空');
+			return false;
+		}
+		else if (!isTagAvail(addItemsArray[2])) {
+			alert('Tag 包含非法字符');
+			return false;
+		}
+		else if (!addItemsArray[3]) {
+			alert('备注不允许为空');
+			return false;
+		}
+		return true;
+	}
+	function toTop() {
+		document.body.scrollTop = 0;
+		document.documentElement.scrollTop = 0;
+	}
+	function addTableSelectAllChanged() {
+		if (document.getElementById('addTableSelectAll').checked) {
+			for (let i = 0;true;i++) {
+				let element = document.getElementById('addTableCb' + i);
+				if (!element) {
+					break;
+				}
+				else {
+					element.checked = true;
+				}
+			}
+		}
+		else {
+			for (let i = 0;true;i++) {
+				let element = document.getElementById('addTableCb' + i);
+				if (!element) {
+					break;
+				}
+				else {
+					element.checked = false;
+				}
+			}
+		}
+	}
+	function addTableAddTr() {
+		let now_size = 0;
+		for(let i = 0;true;i++) {
+			let element = document.getElementById('addTableTr' + i);
+			if (!element) {
+				break;
+			}
+			else {
+				now_size++;
+			}
+		}
+		let insertElement = document.createElement("tr");
+		insertElement.id = 'addTableTr' + now_size;
+		insertElement.innerHTML = "";
+		insertElement.innerHTML += '<td><input type="checkbox" id="addTableCb' + now_size + '" name="addTableCb' + now_size + '"></td>\n';
+		insertElement.innerHTML += '<td><input type="text" id="addTableKami' + now_size + '" name="addTableKami' + now_size + '" style="width: 120px;"></td>';
+		insertElement.innerHTML += '<td><input type="number" id="addTableNum' + now_size + '" name="addTableNum' + now_size + '" style="width: 120px;"></td>';
+		insertElement.innerHTML += '<td><input type="text" id="addTableTag' + now_size + '" name="addTableTag' + now_size + '" style="width: 120px;"></td>';
+		insertElement.innerHTML += '<td><input type="text" id="addTablePs' + now_size + '" name="addTablePs' + now_size + '" style="width: 120px;"></td>';
+		document.getElementById('addTableTbody').appendChild(insertElement);
+	}
+	function removeAddTable() {
+		let now_which = 0;
+		let cf = confirm('确认删除吗？');
+		if (cf) {
+			for(let i = 0;true;i++) {
+				if (!document.getElementById('addTableCb' + i)) {
+					break;
+				}
+				else {
+					if (document.getElementById('addTableCb' + i).checked) {
+						document.getElementById('addTableTr' + i).remove();
+					}
+					else {
+						document.getElementById('addTableTr' + i).id = 'addTableTr' + now_which;
+						document.getElementById('addTableCb' + i).setAttribute('name','addTableCb' + now_which);
+						document.getElementById('addTableCb' + i).id = 'addTableCb' + now_which;
+						document.getElementById('addTableKami' + i).setAttribute('name','addTableKami' + now_which);
+						document.getElementById('addTableKami' + i).id = 'addTableKami' + now_which;
+						document.getElementById('addTableNum' + i).setAttribute('name','addTableNum' + now_which);
+						document.getElementById('addTableNum' + i).id = 'addTableNum' + now_which;
+						document.getElementById('addTableTag' + i).setAttribute('name','addTableTag' + now_which);
+						document.getElementById('addTableTag' + i).id = 'addTableTag' + now_which;
+						document.getElementById('addTablePs' + i).setAttribute('name','addTablePs' + now_which);
+						document.getElementById('addTablePs' + i).id = 'addTablePs' + now_which;
+						now_which++;
+					}
+				}
+			}
+			document.getElementById('addTableSelectAll').checked = false;
+			if (!document.getElementById('addTableTr0')) {
+				addTableAddTr();
+			}
+		}
+	}
+	function validateAddTable() {
+		let tableRowCounts = 0;
+		for(let i = 0;true;i++) {
+			element = document.getElementById('addTableTr' + i);
+			if (!element) {
+				break;
+			}
+			else{
+				tableRowCounts++;
+			}
+		}
+		var twoDimensionalArrayOfItems = new Array(tableRowCounts);
+		for(let i = 0;i < tableRowCounts;i++) {
+			twoDimensionalArrayOfItems[i] = new Array();
+			twoDimensionalArrayOfItems[i][0] = document.getElementById('addTableKami' + i).value;
+			twoDimensionalArrayOfItems[i][1] = document.getElementById('addTableNum' + i).value;
+			twoDimensionalArrayOfItems[i][2] = document.getElementById('addTableTag' + i).value;
+			twoDimensionalArrayOfItems[i][3] = document.getElementById('addTablePs' + i).value;
+			twoDimensionalArrayOfItems[i][4] = document.getElementById('addTableCb' + i).checked;
+		}
+		for(let i = tableRowCounts - 1;i >= 0;i--) {
+			tmpArr = twoDimensionalArrayOfItems[i];
+			if (!(tmpArr[0] || tmpArr[1] || tmpArr[2] || tmpArr[3])) {
+				twoDimensionalArrayOfItems.splice(i,1);
+			}
+			else {
+				if (tmpArr[0] && !isLetterOrDigitNoAlert(tmpArr[0])) {
+					alert('第 ' + (i + 1) + ' 行，卡密只允许字母和数字');
+					return false;
+				}
+				else if (!tmpArr[1]) {
+					alert('第 ' + (i + 1) + ' 行，次数不允许为空');
+					return false;
+				}
+				else if (!isAllDigitNoAlert(tmpArr[1])) {
+					alert('第 ' + (i + 1) + ' 行，次数仅允许数字');
+					return false;
+				}
+				else if (!tmpArr[2]) {
+					alert('第 ' + (i + 1) + ' 行，Tag 不允许为空');
+					return false;
+				}
+				else if (!isTagAvail(tmpArr[2])) {
+					alert('第 ' + (i + 1) + ' 行，Tag 包含非法字符');
+					return false;
+				}
+				else if (!tmpArr[3]) {
+					alert('第 ' + (i + 1) + ' 行，备注不允许为空');
+					return false;
+				}
+			}
+		}
+		if (twoDimensionalArrayOfItems.length == 0) {
+			alert('所有卡密为空');
+			return false;
+		}
+		let addCf = confirm('确认添加吗？');
+		if (addCf) {
+			return true;
+		}
+		else{
+			return false;
+		}
+	}
+	function submitAddTable() {
+		$('#addTableFormId').submit();
+	}
+	function reverseSelect() {
+		for (let i = 0;true;i++) {
+			element = document.getElementById('checkbox' + i);
+			if (!element) {
+				break;
+			}
+			else {
+				element.checked = !element.checked;
+			}
+		}
+	}
+	var cookie = document.cookie.split('; ');
+	var editDetails = new Array(2);
+	for (let i = 0;i < cookie.length;i++) {
+		if (cookie[i].split('=')[0] == 'editFormSelect') {
+			editDetails[0] = cookie[i].split('=')[1].split(':')[0];
+			editDetails[1] = cookie[i].split('=')[1].split(':')[1];
+		}
+		else if (cookie[i].split('=')[0] == 'addFormOpened' && cookie[i].split('=')[1] == 1) {
+			displayAddForm();
+		}
+		else if (cookie[i].split('=')[0] == 'addTableOpened' && cookie[i].split('=')[1] == 1) {
+			displayAddFormTable();
+		}
+	}
+	{% if loginIdentity != 'writeonly' %}
+		if (window.innerHeight <= document.body.scrollHeight) {
+			document.getElementById('pop-out-bg').style.height = document.body.scrollHeight + 'px';
+		}
+		else {
+			document.getElementById('pop-out-bg').style.height = window.innerHeight;
+		}
+	{% endif %}
+	{% for a,b,c,d in kamiList %}
+		if ("{{ a }}" == editDetails[0] && "{{ loginToken }}" == editDetails[1]) {
+			document.getElementById('checkbox{{ forloop.counter0 }}').checked = true;
+			displayEditForm();
+		}
+	{% endfor %}
+	{% if messages %}
+		window.onload = function() {
+			{% for msg in messages %}
+				alert('{{ msg.message }}')
+			{% endfor %}
+		}
+	{% endif %}
+</script>
+
+</html>
