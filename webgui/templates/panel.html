@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<title>Panel</title>
+</head>
+
+<body>
+	<form action="/redirect" method="get">
+		<button type="submit" name="admin">Admin 管理</button>
+		<button type="submit" name="ban">Ban 名单管理</button>
+		<button type="submit" name="kami">卡密管理</button>
+		<button type="submit" name="log">Search 日志</button>
+		<button type="submit" name="myid">我的身份</button>
+		<button type="submit" name="panel" onclick="refreshTime()">刷新时间</button>
+		<button type="submit" name="index">返回主页</button>
+		<button type="submit" name="logout">登出</button>
+	</form>
+</body>
+
+<script type="text/javascript">
+	function refreshTime() {
+		nowTimeInSec = new Date().getTime();
+		nowTimeInSec /= 1000;
+		document.cookie = 'time=' + nowTimeInSec + '; path=/';
+	}
+</script>
+
+</html>
