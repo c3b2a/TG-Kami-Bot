@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Ban Manager</title>
+</head>
+
+<style type="text/css">
+	* {
+		box-sizing: border-box;
+	}
+	html {
+		background-color: #DDDDDD;
+	}
+	body {
+		margin: 0;
+	}
+	.table-style {
+		width: 480px;
+		border: solid 1px #222222;
+		border-radius: 8px;
+		line-height: 200%;
+		text-align: center;
+		margin: 8px;
+		position: relative;
+		left: calc(50% - 240px);
+	}
+	.table-style td, .table-style th {
+		border: solid 1px #333333;
+		border-radius: 4px;
+	}
+	.table-style th {
+		font-weight: bold;
+	}
+	.form-pos {
+		position: relative;
+		padding: 16px;
+		left: 50%;
+		transform: translate(-50%,0);
+	}
+	.form-pos .double-button {
+		position: relative;
+		left: 50%;
+		transform: translate(-100%,0);
+	}
+	.form-pos .single-button {
+		position: relative;
+		left: 50%;
+		transform: translate(-50%,0);
+	}
+	.form-pos * {
+		text-align: center;
+	}
+	.form-pos .input-style {
+		text-align: left;
+	}
+</style>
+
+<body>
+	<form action="/redirect" method="get" class="form-pos">
+		<button type="submit" name="panel" class="double-button">返回面板</button>
+		<button type="submit" name="ban" class="double-button">刷新页面</button>
+	</form>
+	<form action="/panel/ban" method="post" class="form-pos">
+		{% csrf_token %}
+		<table class="table-style">
+			<tr>
+				<th style="width: 36px;"><input type="checkbox" name="selectAll" id="selectAll" onchange="checkboxSelectAll()"></th>
+				<th>Ban ID</th>
+			</tr>
+			{% for i in banList %}
+				<tr>
+					<td style="width: 36px;"><input type="checkbox" name="{{ i }}" id="checkbox{{ forloop.counter0 }}"></td>
+					<td>{{ i }}</td>
+				</tr>
+			{% endfor %}
+		</table>
+		<pre style="line-height: 50%;font-size: 0.2em;">
+		</pre>
+		<button type="submit" name="delselect" onclick="chkZeroSelect()" class="single-button">删除</button>
+	</form>
+	<form action="/panel/ban" method="post" class="form-pos">
+		{% csrf_token %}
+		<p>ID : <input type="text" name="addBanId" id="addBanId" class="input-style"></p>
+		<button type="submit" name="submitAdd" onclick="chkStringIsNull()" class="single-button">添加</button>
+	</form>
+</body>
+
+<script type="text/javascript">
+	function checkboxSelectAll() {
+		if (document.getElementById('selectAll').checked) {
+			{% for i in banList %}
+				document.getElementById('checkbox{{ forloop.counter0 }}').checked = true;
+			{% endfor %}
+		}
+		else {
+			{% for i in banList %}
+				document.getElementById('checkbox{{ forloop.counter0 }}').checked = false;
+			{% endfor %}
+		}
+	}
+	function chkZeroSelect() {
+		var count = 0;
+		{% for i in banList %}
+			if (document.getElementById('checkbox{{ forloop.counter0 }}').checked) {
+				count++;
+			}
+		{% endfor %}
+		if (count == 0) {
+			alert('未选择 ID');
+		}
+	}
+	function chkStringIsNull() {
+		if (!document.getElementById('addBanId').value) {
+			alert('输入框为空');
+		}
+		else {
+			if (isNaN(document.getElementById('addBanId').value)) {
+				alert('ID 仅允许数字');
+			}
+			else {
+				canIAdd();
+			}
+		}
+	}
+	function getIdentity(Id) {
+		identityObj = {
+			{% for i,j in identityList.items %}
+				{{ i }}: '{{ j }}',
+			{% endfor %}
+		}
+		return identityObj[Id];
+	}
+	function canIAdd() {
+		var loginIdentity = '{{ loginIdentity }}';
+		var IdToAdd = document.getElementById('addBanId').value;
+		var List = [];
+		{% for i in adminList %}
+			List[{{ forloop.counter0 }}] = "{{ i }}";
+		{% endfor %}
+		var flag = false;
+		for (var i = 0;i < List.length;i++) {
+			if (IdToAdd == List[i]) {
+				flag = true;
+				break;
+			}
+		}
+		if (flag && loginIdentity == 'common-admin') {
+			alert('您无权进行此操作');
+		}
+		else if (flag && getIdentity(IdToAdd) == 'super-admin' && loginIdentity == 'privileged-admin') {
+			alert('您无权进行此操作');
+		}
+	}
+	{% if messages %}
+		window.onload = function() {
+			{% for msg in messages %}
+				alert('{{ msg.message }}')
+			{% endfor %}
+		}
+	{% endif %}
+	getIdentity();
+</script>
+
+</html>
