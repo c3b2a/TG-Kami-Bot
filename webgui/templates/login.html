@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Token Login</title>
+</head>
+<body>
+	<form action="/login" method="post">
+		{% csrf_token %}
+		<p>Token : </p>
+		<input type="password" name="token">
+		<button type="submit">登录</button>
+		<br><br>
+		<button type="submit" name="index">返回主页</button>
+	</form>
+	<p>{{err}}</p>
+</body>
+</html>
