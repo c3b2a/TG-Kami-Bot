@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>My Identity</title>
+</head>
+
+<style type="text/css">
+	html
+	{
+		background-color: #C0D8D8;
+	}
+	.rounded-rect
+	{
+		background-color: #DDDDDDBB;
+		border-radius: 12px;
+		border: solid 2px grey;
+		height: 216px;
+		width: 440px;
+		position: absolute;
+		left: 50%;
+		top: 50%;
+		transform: translate(-50%,-67%);
+		box-shadow: -3px 3px #33333333;
+	}
+	.bottom-btn
+	{
+		background: #DDDDDD;
+		border: solid 3px grey;
+		border-radius: 30px;
+		width: 120px;
+		height: 60px;
+		position: absolute;
+		left: 50%;
+		top: 50%;
+		transform: translate(-50%,150%);
+	}
+	.bottom-btn:after,.bottom-btn:before
+	{
+		border-radius: 30px;
+		content: "";
+		position: absolute;
+		left: 0;
+		top: 0;
+		width: 0;
+		height: 100%;
+		background: #50C0E140;
+		z-index: -2;
+	}
+	.bottom-btn:before
+	{
+		border-radius: 30px;
+		transition: 0.3s ease;
+		background: #22DD2280;
+		z-index: -1;
+	}
+	.bottom-btn:hover:after,.bottom-btn:hover:before
+	{
+		border-radius: 30px;
+		width: 100%;
+	}
+	.center
+	{
+		text-align: center;
+	}
+	.arial
+	{
+		font-family: sans-serif;
+	}
+	.bold
+	{
+		font-weight: bold;
+	}
+	.small
+	{
+		font-size: 18px;
+	}
+	.big
+	{
+		font-size: 32px;
+	}
+	.large
+	{
+		font-size: 40px;
+	}
+	.cap
+	{
+		text-transform: capitalize;
+	}
+</style>
+
+<body>
+	<div class="rounded-rect">
+		<p class="center arial bold big">Your Identity Is</p>
+		<p class="bold cap large center arial">{{ identity }}</p>
+	</div>
+	<form action="/redirect" method="get">
+		<button type="submit" name="panel" class="bottom-btn small">返回面板</button>
+	</form>
+</body>
+</html>
