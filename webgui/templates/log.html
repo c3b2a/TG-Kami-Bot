@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Log Reader</title>
+</head>
+
+<style type="text/css">
+	.table-style {
+		width: auto;
+		border: solid 1px #222222;
+		border-radius: 8px;
+		line-height: 200%;
+		text-align: center;
+		margin: 8px;
+		position: relative;
+		left: 50%;
+		transform: translate(-50%,0);
+	}
+	.table-style td, .table-style th {
+		padding: 4px;
+		border: solid 1px #333333;
+		border-radius: 4px;
+	}
+	.table-style th {
+		font-weight: bold;
+	}
+</style>
+
+<body>
+	<form action="/redirect" method="get">
+		<button type="submit" name="panel">返回面板</button>
+		<button type="submit" name="log">刷新页面</button>
+	</form>
+	<table class="table-style">
+		<tr>
+			<th>ID</th>
+			<th>时间戳</th>
+			<th>UTC 时间</th>
+			<th>使用卡密</th>
+		</tr>
+		{% for a,b,c,d in log %}
+			<tr>
+				<th>{{ a }}</th>
+				<th>{{ b }}</th>
+				<th>{{ c }}</th>
+				<th>{{ d }}</th>
+			</tr>
+		{% endfor %}
+	</table>
+</body>
+</html>
