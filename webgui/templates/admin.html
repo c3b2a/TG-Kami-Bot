@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Admin Manager</title>
+</head>
+
+<style type="text/css">
+	:root {
+		--line-height: 175%;
+		--head-color: #FFCA92;
+		--foot-color: #DDB4FF;
+		--side-color-1: #B4FFC9;
+		--side-color-2: #B4E0FF;
+		--submit-btn-width: 80px;
+		--submit-btn-height: 40px;
+		--submit-btn-font-size: 0.6em;
+	}
+	* {
+		box-sizing: border-box;
+	}
+	html {
+		width: 100%;
+		height: 100%;
+		background-repeat: no-repeat;
+		background-size: 100% 50%,100% 100%;
+		background-image:
+			linear-gradient(var(--head-color),var(--head-color)),
+			linear-gradient(var(--foot-color),var(--foot-color));
+	}
+	body {
+		margin: 0;
+		font-family: Arial;
+	}
+	p.noreturn {
+		padding: 0px;
+		margin: 0px;
+		display: inline;
+	}
+	p.notice {
+		color: #DD2222;
+		font-size: 0.8em;
+	}
+	.tablestyle {
+		position: relative;
+		left: 50%;
+		transform: translate(-50%,0);
+		table-layout: fixed;
+		border: solid 1px #333333;
+		text-align: center;
+		line-height: 200%;
+		width: 75%;
+		border-radius: 8px;
+		background-color: #DDDDDD80;
+		box-shadow: -3px 3px #22222230;
+	}
+	.tablestyle th {
+		border: solid 1px #333333;
+		font-weight: bold;
+		border-radius: 4px;
+	}
+	.tablestyle td {
+		border: solid 1px #333333;
+		border-radius: 4px;
+	}
+	.row {
+		line-height: var(--line-height);
+		display: flex;
+		flex-wrap: wrap;
+	}
+	.side-1 {
+		line-height: var(--line-height);
+		flex: 50%;
+		background-color: var(--side-color-1);
+		padding: 2.25em;
+	}
+	.side-2 {
+		line-height: var(--line-height);
+		flex: 50%;
+		background-color: var(--side-color-2);
+		padding: 2.25em;
+	}
+	.side-reverse-1 {
+		line-height: var(--line-height);
+		flex: 50%;
+		background-color: var(--side-color-1);
+		padding: 2.25em;
+	}
+	.side-reverse-2 {
+		line-height: var(--line-height);
+		flex: 50%;
+		background-color: var(--side-color-2);
+		padding: 2.25em;
+	}
+	.head {
+		text-align: center;
+		padding: 3em;
+		background: var(--head-color);
+	}
+	.showToken {
+		font-size: 1.2em;
+	}
+	.foot {
+		padding: 20px;
+		text-align: center;
+		font-size: 1.2em;
+		background: var(--foot-color);
+	}
+	.center-style {
+		text-align: center;
+		left: 50%;
+		position: relative;
+		transform: translate(-50%,0);
+	}
+	.big {
+		font-size: 1.2em;
+	}
+	.text-bold {
+		font-weight: bold;
+	}
+	.inset-shadow-1 {
+		box-shadow: -2px -2px 2px 2px #FFFFFF inset,-2px 2px 2px 2px #FFFFFF inset;
+	}
+	.inset-shadow-2 {
+		box-shadow: 2px 2px 2px 2px #FFFFFF inset,2px -2px 2px 2px #FFFFFF inset;
+	}
+	.inset-shadow-3 {
+		box-shadow: 0 -4px 2px 0 #FFFFFF inset;
+	}
+	.inset-shadow-4 {
+		box-shadow: 0 4px 2px 0 #FFFFFF inset;
+	}
+	.link-style:link {
+		text-decoration: none;
+		color: #333333;
+	}
+	.link-style:visited {
+		text-decoration: none;
+		color: #333333;
+	}
+	.link-style:hover {
+		text-decoration: underline;
+		color: #CC3333;
+	}
+	.link-style:active {
+		text-decoration: line-through;
+		color: #33CC33;
+	}
+	.bgshow {
+		background-color: #00000080;
+	}
+	.btn-pos-1 {
+		font-size: var(--submit-btn-font-size);
+		border: 0.25em dashed #333333BB;
+		background-color: #DDDDDDBB;
+		border-radius: 20px;
+		position: relative;
+		width: var(--submit-btn-width);
+		height: var(--submit-btn-height);
+		left: calc(100% - var(--submit-btn-width) * 3 - 1.2em);
+		bottom: 0px;
+		z-index: 1;
+		cursor: pointer;
+	}
+	.btn-pos-2 {
+		font-size: var(--submit-btn-font-size);
+		border: 0.25em dashed #333333BB;
+		background-color: #DDDDDDBB;
+		border-radius: 20px;
+		position: relative;
+		width: var(--submit-btn-width);
+		height: var(--submit-btn-height);
+		left: calc(100% - var(--submit-btn-width));
+		bottom: 0px;
+		z-index: 1;
+		cursor: pointer;
+	}
+	.btn-pos-1:after,.btn-pos-1:before,.btn-pos-2:after,.btn-pos-2:before {
+		border-radius: 20px;
+		content: "";
+		position: absolute;
+		left: 0;
+		top: 0;
+		width: 0;
+		height: 100%;
+		background: #DDDDDDBB;
+		z-index: -2;
+	}
+	.btn-pos-1:before,.btn-pos-2:before {
+		border-radius: 20px;
+		transition: 0.3s ease;
+		background: #22DD2280;
+		z-index: -1;
+	}
+	.btn-pos-1:hover:after,.btn-pos-1:hover:before,.btn-pos-2:hover:after,.btn-pos-2:hover:before {
+		border-radius: 20px;
+		width: 100%;
+	}
+	.blue-part-show {
+		border: 4px solid #2758B3;
+		border-radius: 12px;
+		box-shadow: 0 0 2px 2px #5C7AC4 inset,0 0 1px 1px #5C7AC4;
+		background-color: #A0BBDC80;
+		padding: 8px;
+		height: calc(100% - 106px);
+	}
+	.green-part-show {
+		border: 4px solid #27B32A;
+		border-radius: 12px;
+		box-shadow: 0 0 2px 2px #5CC472 inset,0 0 1px 1px #5CC472;
+		background-color: #A0DCA380;
+		padding: 8px;
+		height: calc(100% - 106px);
+	}
+	.swap-part-1 {
+		border: 4px solid #27B32A;
+		border-radius: 12px;
+		box-shadow: 0 0 2px 2px #5CC472 inset,0 0 1px 1px #5CC472;
+		background-color: #A0DCA380;
+		padding: 8px;
+		height: calc(100% - 106px);
+	}
+	.swap-part-2 {
+		border: 4px solid #2758B3;
+		border-radius: 12px;
+		box-shadow: 0 0 2px 2px #5C7AC4 inset,0 0 1px 1px #5C7AC4;
+		background-color: #A0BBDC80;
+		padding: 8px;
+		height: calc(100% - 106px);
+	}
+	.input-style {
+		width: 36%;
+		height: 2em;
+		border: solid 1px #333333;
+		border-radius: 1em;
+		padding: 0.25em;
+		text-indent: 0.25em;
+		cursor: text;
+	}
+	.select-style {
+		width: auto;
+		height: 2em;
+		border: solid 1px #333333;
+		border-radius: 1em;
+		padding: 0.25em;
+		cursor: pointer;
+	}
+	.head-btn-div-1 {
+		background-color: #00000020;
+		border: solid 4px #00000080;
+		border-radius: 28px;
+		height: 56px;
+		width: 120px;
+		padding: 16px;
+		position: relative;
+		left: calc(50% - 144px);
+		transform: translate(0,75%);
+		z-index: 1;
+		cursor: pointer;
+	}
+	.head-btn-div-1 button {
+		position: relative;
+		left: 50%;
+		top: 50%;
+		transform: translate(-50%,-50%);
+		padding: 10px;
+		height: 40px;
+		width: 100px;
+		border: transparent;
+		border-radius: 40px;
+		background-color: #FFFFFFC0;
+		z-index: 1;
+		cursor: pointer;
+	}
+	.head-btn-div-2 {
+		background-color: #00000020;
+		border: solid 4px #00000080;
+		border-radius: 28px;
+		height: 56px;
+		width: 120px;
+		padding: 16px;
+		position: relative;
+		left: calc(50% + 24px);
+		transform: translate(0,calc(-75% + 24px));
+		z-index: 1;
+		cursor: pointer;
+	}
+	.head-btn-div-2 button {
+		position: relative;
+		left: 50%;
+		top: 50%;
+		transform: translate(-50%,-50%);
+		padding: 10px;
+		height: 40px;
+		width: 100px;
+		border: transparent;
+		border-radius: 40px;
+		background-color: #FFFFFFC0;
+		z-index: 1;
+		cursor: pointer;
+	}
+	.head-btn-div-1 button:after,.head-btn-div-1 button:before,.head-btn-div-2 button:after,.head-btn-div-2 button:before {
+		border-radius: 20px;
+		content: "";
+		position: absolute;
+		left: 0;
+		top: 0;
+		width: 0;
+		height: 100%;
+		background: #DDDDDDBB;
+		z-index: -2;
+	}
+	.head-btn-div-1 button:before,.head-btn-div-2 button:before {
+		border-radius: 20px;
+		transition: 0.3s ease;
+		background: #22DD2280;
+		z-index: -1;
+	}
+	.head-btn-div-1 button:hover:after,.head-btn-div-1 button:hover:before,.head-btn-div-2 button:hover:after,.head-btn-div-2 button:hover:before {
+		border-radius: 20px;
+		width: 100%;
+	}
+	@media screen and (max-width: 840px) {
+		.row {
+			flex-direction: column;
+		}
+		.side-reverse-1 {
+			background-color: var(--side-color-2);
+		}
+		.side-reverse-2 {
+			background-color: var(--side-color-1);
+		}
+		.inset-shadow-1,.inset-shadow-2 {
+			box-shadow: 0 -4px 2px 0 #FFFFFF inset,0 4px 2px 0 #FFFFFF inset;
+		}
+		.swap-part-1 {
+			height: calc(100% - 64px);
+			border: 4px solid #2758B3;
+			border-radius: 12px;
+			box-shadow: 0 0 2px 2px #5C7AC4 inset,0 0 1px 1px #5C7AC4;
+			background-color: #A0BBDC80;
+			padding: 8px;
+		}
+		.swap-part-2 {
+			height: calc(100% - 64px);
+			border: 4px solid #27B32A;
+			border-radius: 12px;
+			box-shadow: 0 0 2px 2px #5CC472 inset,0 0 1px 1px #5CC472;
+			background-color: #A0DCA380;
+			padding: 8px;
+		}
+	}
+</style>
+
+<body>
+	<div class="head inset-shadow-3">
+		<p class="showToken">Your Current Token Is <span class="text-bold">{{ Token }}</span></p>
+		<form action="/redirect" method="get">
+			<div class="head-btn-div-1">
+				<button type="submit" name="panel">返回面板</button>
+			</div>
+			<div class="head-btn-div-2">
+				<button type="submit" name="admin">刷新页面</button>
+			</div>
+		</form>
+		<p class="notice">{{ head_notice }}</p>
+	</div>
+	<div class="row">
+		<div class="side-2 inset-shadow-1">
+			<p class="big center-style">Webgui Admin Table</p>
+			{% if showWebguiTable %}
+				<table class="tablestyle">
+					<tr>
+						<th>Token</th>
+						<th>Admin Type</th>
+					</tr>
+					{% for i,j in webguiList.items %}
+						<tr>
+							<td>{{ i }}</td>
+							<td>{{ j }}</td>
+						</tr>
+					{% endfor %}
+				</table>
+			{% endif %}
+		</div>
+		<div class="side-1 inset-shadow-2">
+			<p class="big center-style">Bot Admin Table</p>
+			{% if showBotTable %}
+				<table class="tablestyle">
+					<tr>
+						<th>Telegram ID</th>
+						<th>Admin Type</th>
+					</tr>
+					{% for i,j in botAdminList.items %}
+						<tr>
+							<td>{{ i }}</td>
+							<td>{{ j }}</td>
+						</tr>
+					{% endfor %}
+				</table>
+			{% endif %}
+		</div>
+	</div>
+	<div class="row">
+		<div class="side-reverse-1 inset-shadow-1">
+			<div class="center-style">
+				<p class="big">添加管理员 ( Webgui )</p>
+				<p class="notice"><span style="color: transparent;font-size: 0;user-select: none;">.</span>{{ webgui }}</p>
+			</div>
+			<form action="/panel/admin" method="post" class="swap-part-1">
+				{% csrf_token %}
+				<p>Token : <input type="text" name="webguiaddadmin" class="input-style"><br></p>
+				<p>Identity : <select name="webguiadminidentity" class="select-style">
+					<option value="global-admin">全局管理员</option>
+					<option value="privileged-admin">特权管理员</option>
+					<option value="common-admin">普通管理员</option>
+					<option value="readonly">只读管理员</option>
+					<option value="writeonly">只写管理员</option>
+				</select><br></p>
+				<button type="submit" class="btn-pos-2">添加</button>
+			</form>
+		</div>
+		<div class="side-reverse-2 inset-shadow-2">
+			<div class="center-style">
+				<p class="big">添加管理员 ( Bot ) </p>
+				<p class="notice"><span style="color: transparent;font-size: 0;user-select: none;">.</span>{{ bot }}</p>
+			</div>
+			<form action="/panel/admin" method="post" class="swap-part-2">
+				{% csrf_token %}
+				<p>Telegram ID : <input type="text" name="botaddadmin" class="input-style"><br></p>
+				<pre style="font-size: 1.2em">
+				</pre>
+				<button type="submit" class="btn-pos-2">添加</button>
+			</form>
+		</div>
+	</div>
+	<div class="row">
+		<div class="side-2 inset-shadow-1">
+			<div class="center-style">
+				<p class="big">编辑管理员 ( Webgui )</p>
+				<p class="notice"><span style="color: transparent;font-size: 0;user-select: none;">.</span>{{ editwebguierr }}</p>
+			</div>
+			<form action="/panel/admin" method="post" class="blue-part-show">
+				{% csrf_token %}
+				<p>Token : <select name="editTokenSelect" class="select-style">
+					{% for i,j in webguiList.items %}
+						{% ifnotequal i Token %}
+							<option value="{{ i }}">{{ i }} ( {{ j }} )</option>
+						{% endifnotequal %}
+					{% endfor %}
+				</select>
+				<p>New Token : <input type="text" name="ntoken" class="input-style"></p>
+				<p>New Identity : <select name="ntype" class="select-style">
+					<option value="global-admin">全局管理员</option>
+					<option value="privileged-admin">特权管理员</option>
+					<option value="common-admin">普通管理员</option>
+					<option value="readonly">只读管理员</option>
+					<option value="writeonly">只写管理员</option>
+				</select></p>
+				{% if webguiAdminEditable %}
+					<button type="submit" name="webguidelete" class="btn-pos-2">删除此管理</button>
+					<button type="submit" name="webguieditconfirm" class="btn-pos-1">保存修改</button>
+				{% else %}
+					<button type="submit" name="webguidelete" class="btn-pos-2" disabled="disabled">删除此管理</button>
+					<button type="submit" name="webguieditconfirm" class="btn-pos-1" disabled="disabled">保存修改</button>
+				{% endif %}
+			</form>
+		</div>
+		<div class="side-1 inset-shadow-2">
+			<div class="center-style">
+				<p class="big">编辑管理员 ( Bot )</p>
+				<p class="notice"><span style="color: transparent;font-size: 0;user-select: none;">.</span>{{ editboterr }}</p>
+			</div>
+			<form action="/panel/admin" method="post" class="green-part-show">
+				{% csrf_token %}
+				<p>Telegram ID : <select name="editBotAdminSelect" class="select-style">
+					{% for i,j in botAdminList.items %}
+						{% if j != 'super-admin' %}
+							<option value="{{ i }}">{{ i }} ( {{ j }} )</option>
+						{% endif %}
+					{% endfor %}
+				</select></p>
+				<p>New Telegram ID : <input type="text" name="newtgid" class="input-style"></p>
+				<pre style="font-size: 1.2em">
+				</pre>
+				{% if botAdminEditable %}
+					<button type="submit" name="botadmindelete" class="btn-pos-2">删除此管理</button>
+					<button type="submit" name="botadmineditconfirm" class="btn-pos-1">保存更改</button>
+				{% else %}
+					<button type="submit" name="botadmindelete" class="btn-pos-2" disabled="disabled">删除此管理</button>
+					<button type="submit" name="botadmineditconfirm" class="btn-pos-1" disabled="disabled">保存更改</button>
+				{% endif %}
+			</form>
+		</div>
+	</div>
+	<div class="foot inset-shadow-4">
+		<p>Webgui for 卡密 Bot</p>
+		<a href="https://github.com/c3b2a/TG-Kami-Bot" target="_blank" class="link-style">Github</a>
+	</div>
+</body>
+
+
+<script type="text/javascript">
+	{% if messages %}
+		window.onload = function() {
+			{% for msg in messages %}
+				alert('{{ msg.message }}');
+			{% endfor %}
+		}
+	{% endif %}
+</script>
+
+</html>
