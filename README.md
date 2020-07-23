@@ -59,7 +59,7 @@ Token.txt 储存格式:<br>
 
 类型分为: global-admin, privileged-admin, common-admin, readonly, writeonly
 
-<h3>2、运行</h3>
+<h3>3、运行</h3>
 
 运行前请先配置好 bot
 
