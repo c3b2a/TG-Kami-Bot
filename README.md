@@ -6,7 +6,9 @@
 
 需要安装 telepot 和 watchdog
 
+```bash
 pip3 install telepot watchdog
+```
 
 <h2>更新频道</h2>
 
@@ -42,3 +44,18 @@ searchLog.txt:
 [用户 ID] [时间戳] [卡密]<br>
 [用户 ID] [时间戳] [卡密]<br>
 ...<br>
+
+<h2>Webgui 使用</h2>
+<h3>1、依赖</h3>
+
+```bash
+pip3 install django numpy
+```
+
+<h3>2、运行</h3>
+
+运行前请先配置好 bot
+
+```bash
+python3 manage.py runserver 0.0.0.0:8000
+```
