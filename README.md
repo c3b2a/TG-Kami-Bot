@@ -12,8 +12,6 @@ pip3 install telepot watchdog
 
 <h2>更新频道</h2>
 
-此项目将会持续更新
-
 [Telegram 更新频道](https://t.me/kamibotchannel)
 
 卡密 Bot Developed By [c3b2a](https://t.me/c3b2abot)
